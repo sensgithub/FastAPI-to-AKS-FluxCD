@@ -10,6 +10,10 @@ services:
       - db
     env_file:
       - .env
+    networks:
+      - backend
+    restart: always
+
 
   db:
     image: postgres:13
@@ -17,3 +21,12 @@ services:
       - "5432:5432"
     env_file:
       - .env
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+    restart: always
+
+networks:
+  backend:
+    driver: bridge
