@@ -39,14 +39,10 @@ spec:
                 name: fastapi-app-config
             - secretRef:
                 name: db-secret
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "250m"      
-            limits:
-              memory: "512Mi"   
-              cpu: "500m"       
-      restartPolicy: Always
+          resources:      
+      limits:
+         processor: 2
+         memory: 800Mi 
 ---
 apiVersion: apps/v1
 kind: Deployment
