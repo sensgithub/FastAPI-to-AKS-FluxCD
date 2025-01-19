@@ -5,9 +5,10 @@ from sqlalchemy.orm import declarative_base
 from models import PersonCreate
 from database import engine, SessionLocal
 
+# Start
 app = FastAPI()
 Base = declarative_base()
-
+# Populate db
 async def seed_database(conn):
     try:
         seed_data = [
@@ -32,7 +33,7 @@ async def seed_database(conn):
     except Exception as e:
         print(f"Error seeding database: {e}")
         raise
-    
+
 @app.on_event("startup")
 async def startup():
     async with engine.begin() as conn:
@@ -46,13 +47,13 @@ async def shutdown():
 async def get_db():
     async with SessionLocal() as session:
         yield session
-
+# GET Request for SELECT 
 @app.get("/")
 async def read_root(db: AsyncSession = Depends(get_db)):
     result = await db.execute(text("SELECT * FROM persons"))
     persons = result.mappings().all()
     return {"persons": persons}
-
+# GET Request for person by id
 @app.get("/person/{person_id}")
 async def get_person_by_id(person_id: int, db: AsyncSession = Depends(get_db)):
     query = text("SELECT * FROM persons WHERE id = :id")
@@ -61,7 +62,7 @@ async def get_person_by_id(person_id: int, db: AsyncSession = Depends(get_db)):
     if not person:
         raise HTTPException(status_code=404, detail="Person not found")
     return person
-
+# DB check if working
 @app.get("/health")
 async def health_check():
     try:
@@ -70,7 +71,7 @@ async def health_check():
         return {"status": "OK", "message": "DB Connected."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-    
+# POST Request to create person
 @app.post("/person")
 async def create_person(person: PersonCreate, db: AsyncSession = Depends(get_db)):
     insert_query = text("INSERT INTO persons (name, age) VALUES (:name, :age) RETURNING id, name, age")
