@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: fastapi-app
-          image: bakdata/fastapi-app-db:6c726eb33e057e4dd41ea5d223b0ffef9232c849
+          image: bakdata/fastapi-app-db:d7cb97fdd6fd53dd498d4a9ef821671407df887f
           ports:
             - containerPort: 8000
           envFrom:
