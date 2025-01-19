@@ -6,6 +6,25 @@ data:
   DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-service:5432/${POSTGRES_DB}"
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+data:
+  init.sql: |
+    DO $$ 
+    BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'fastapi') THEN
+            CREATE DATABASE fastapi;
+        END IF;
+    END $$;
+    \c fastapi;
+    CREATE TABLE IF NOT EXISTS persons (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
+        age INT
+    );
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: db-secret
@@ -76,6 +95,14 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "1"
+        volumeMounts:
+        - name: init-sql-volume
+          mountPath: /docker-entrypoint-initdb.d/
+          readOnly: true
+      volumes:
+      - name: init-sql-volume
+        configMap:
+          name: postgres-init-sql
 ---
 apiVersion: v1
 kind: Service
