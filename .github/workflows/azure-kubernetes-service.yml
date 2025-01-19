@@ -31,13 +31,11 @@ name: DevOps Pipeline for FastAPI
 
 on:
   push:
-    branches: ["main" ]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
 env:
-  IMAGE_NAME: "bakdata/fastapi-app-db"
-  GITHUB_REPO: "sensgithub/bakdata-task"
   AZURE_CONTAINER_REGISTRY: "appbakdata"
   CONTAINER_NAME: "bakdata/fastapi-app-db"
   RESOURCE_GROUP: "bakdata-devops"
@@ -51,10 +49,9 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      # Checks out the repository this file is in
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Logs in with your Azure credentials
       - name: Azure login
         uses: azure/login@v1.4.6
         with:
@@ -62,11 +59,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Builds and pushes an image up to your Azure Container Registry
       - name: Build and push image to ACR
         run: |
-          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${ GITHUB_SHA::5 } --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
-
+          az acr build \
+            --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }} \
+            --registry ${{ env.AZURE_CONTAINER_REGISTRY }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            .
   deploy:
     permissions:
       actions: read
@@ -108,7 +107,7 @@ jobs:
           action: deploy
           manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
           images: |
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${ GITHUB_SHA::5 }
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${ github.sha }
 
   update-deployment:
     runs-on: ubuntu-latest
@@ -125,8 +124,8 @@ jobs:
       run: |
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
-        sed -i "s#sens31.*#sens31/bakdata-task:${GITHUB_SHA::7}#g" manifests/app-deployment.yml
+        sed -i "s#bakdata.*#bakdata/fastapi-app-db:${github.sha}#g" manifests/app-deployment.yml
         cd manifests
-        git add php-deployment.yml
-        git commit -m "Update Docker image => bakdata-task:${ GITHUB_SHA::5 }"
+        git add app-deployment.yml
+        git commit -m "Update Docker image => bakdata-task:${github.sha}"
         git push origin main
