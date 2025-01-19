@@ -55,7 +55,7 @@ jobs:
         git config --global user.name "sensgithub"
         git clone https://sensgithub:${{ secrets.GIT_REPO_TOKEN }}@github.com/sensgithub/bakdata-task.git
         cd bakdata-task/manifests/
-        sed -i "s#bakdata.*#bakdata/fastapi-app-db:${{ github.sha }}#g" deployment.yaml
+        sed -i "s#bakdata.*#appbakdata.azurecr.io.bakdata/fastapi-app-db:${{ github.sha }}#g" deployment.yaml
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
         git push origin main
