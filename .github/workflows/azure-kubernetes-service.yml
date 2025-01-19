@@ -1,40 +1,9 @@
-# This workflow will build and push an application to a Azure Kubernetes Service (AKS) cluster when you push your code
-#
-# This workflow assumes you have already created the target AKS cluster and have created an Azure Container Registry (ACR)
-# The ACR should be attached to the AKS cluster
-# For instructions see:
-#   - https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-portal
-#   - https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal
-#   - https://learn.microsoft.com/en-us/azure/aks/cluster-container-registry-integration?tabs=azure-cli#configure-acr-integration-for-existing-aks-clusters
-#   - https://github.com/Azure/aks-create-action
-#
-# To configure this workflow:
-#
-# 1. Set the following secrets in your repository (instructions for getting these can be found at https://docs.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-cli%2Clinux):
-#    - AZURE_CLIENT_ID
-#    - AZURE_TENANT_ID
-#    - AZURE_SUBSCRIPTION_ID
-#
-# 2. Set the following environment variables (or replace the values below):
-#    - AZURE_CONTAINER_REGISTRY (name of your container registry / ACR)
-#    - RESOURCE_GROUP (where your cluster is deployed)
-#    - CLUSTER_NAME (name of your AKS cluster)
-#    - CONTAINER_NAME (name of the container image you would like to push up to your ACR)
-#    - IMAGE_PULL_SECRET_NAME (name of the ImagePullSecret that will be created to pull your ACR image)
-#    - DEPLOYMENT_MANIFEST_PATH (path to the manifest yaml for your deployment)
-#
-# For more information on GitHub Actions for Azure, refer to https://github.com/Azure/Actions
-# For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
-# For more options with the actions used below please refer to https://github.com/Azure/login
-
 name: DevOps Pipeline for FastAPI
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 env:
   AZURE_CONTAINER_REGISTRY: "appbakdata"
   CONTAINER_NAME: "bakdata/fastapi-app-db"
@@ -49,23 +18,19 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Creating .env file
         run: |
-          echo "DATABASE_URL=postgresql+asyncpg://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}" >> .env
+          echo "DATABASE_URL=postgresql+asyncpg://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres-service:5432/${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-
       - name: Azure login
         uses: azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Build and push image to ACR
         run: |
           az acr build \
@@ -73,6 +38,7 @@ jobs:
             --registry ${{ env.AZURE_CONTAINER_REGISTRY }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             .
+
   deploy:
     permissions:
       actions: read
@@ -81,24 +47,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      # Checks out the repository this file is in
       - uses: actions/checkout@v4
-
-      # Login
       - name: Azure login
         uses: azure/login@v1.4.6
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # Use kubelogin to configure your kubeconfig for Azure auth
-      - name: Set up kubelogin for non-interactive login
+          
+      - name: Set up kubelogin
         uses: azure/use-kubelogin@v1
         with:
           kubelogin-version: 'v0.0.25'
-
-      # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
+          
       - name: Get K8s context
         uses: azure/aks-set-context@v3
         with:
@@ -106,33 +67,12 @@ jobs:
           cluster-name: ${{ env.CLUSTER_NAME }}
           admin: 'false'
           use-kubelogin: 'true'
-
-      # Deploys application based on given manifest file
-      - name: Deploys application
+          
+      - name: Update deployment image
+        run: |
+          sed -i "s|appbakdata.azurecr.io/bakdata/fastapi-app-db:latest|${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}|" ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+      - name: Deploy to AKS
         uses: Azure/k8s-deploy@v4
         with:
           action: deploy
           manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
-          images: |
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${ github.sha }
-
-  update-deployment:
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        repository: sensgithub/bakdata-task
-        ref: 'main'
-        token: ${{ secrets.GIT_TOKEN }}
-      
-    - name: Update deployment YAML file
-      run: |
-        git config --global user.email "svetlan.nikolov@proton.me"
-        git config --global user.name "sensgithub"
-        sed -i "s#bakdata.*#bakdata/fastapi-app-db:${github.sha}#g" manifests/app-deployment.yml
-        cd manifests
-        git add app-deployment.yml
-        git commit -m "Update Docker image => bakdata-task:${github.sha}"
-        git push origin main
