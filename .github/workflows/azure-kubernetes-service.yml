@@ -53,7 +53,7 @@ jobs:
       run: |
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
-        sed -i "s#bakdata.*#bakdata/fastapi-app-db:${{ github.sha }}#g" manifests/deployment.yml
+        sed -i "s#bakdata.*#bakdata/fastapi-app-db:${{ github.sha }}#g" manifests/deployment.yaml
         cd manifests
         git add deployment.yml
         git commit -m "Update Docker image => fastapi-app-db:${{ github.sha }}"
