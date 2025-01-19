@@ -1,4 +1,4 @@
-name: DevOps Pipeline for FastAPI
+ name: DevOps Pipeline for FastAPI
 on:
   push:
     branches: ["main"]
@@ -38,24 +38,37 @@ jobs:
             --registry ${{ env.AZURE_CONTAINER_REGISTRY }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
             .
-  update:
+  deploy:
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
-    needs: build
-    
+    needs: [update]
     steps:
-    - uses: actions/checkout@v2
-      with:
-        repository: sensgithub/DevOps-Project
-        ref: 'main'
-        token: ${{ secrets.GIT_TOKEN }}
-      
-    - name: Update deployment YAML file
-      run: |
-        git config --global user.email "svetlan.nikolov@proton.me"
-        git config --global user.name "sensgithub"
-        git clone https://sensgithub:${{ secrets.GIT_REPO_TOKEN }}@github.com/sensgithub/bakdata-task.git
-        cd bakdata-task/manifests/
-        sed -i "s#bakdata.*#appbakdata.azurecr.io.bakdata/fastapi-app-db:${{ github.sha }}#g" deployment.yaml
-        git add deployment.yaml
-        git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
-        git push origin main
+      - uses: actions/checkout@v4
+      - name: Azure login
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          
+      - name: Set up kubelogin
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
+          
+      - name: Get K8s context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          admin: 'false'
+          use-kubelogin: 'true'
+          
+      - name: Deploy to AKS
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
