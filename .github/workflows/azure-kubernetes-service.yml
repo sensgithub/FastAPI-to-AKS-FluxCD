@@ -8,7 +8,7 @@ env:
   AZURE_CONTAINER_REGISTRY: "appbakdata"
   CONTAINER_NAME: "bakdata/fastapi-app-db"
   RESOURCE_GROUP: "bakdata-devops"
-  CLUSTER_NAME: "bakdata-aks"
+  CLUSTER_NAME: "aks-bakdata"
   DEPLOYMENT_MANIFEST_PATH: "manifests/deployment.yaml"
   
 jobs:
