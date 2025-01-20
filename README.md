@@ -49,4 +49,4 @@ roleRef:
 ```
 # Access the app using service's URL:Port
 
-![alt text]([https://github.com/sensgithub/bakdata-task/blob/main/screenshots/fastapi-example.png])
+![FastAPI Example](https://github.com/sensgithub/bakdata-task/blob/main/screenshots/fastapi-example.png?raw=true)
