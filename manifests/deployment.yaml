@@ -56,8 +56,6 @@ spec:
       initContainers:
       - name: wait-for-db
         image: postgres:13
-        command: ['sh', '-c', 
-          'until pg_isready -h postgres-service -U postgres; do echo waiting for database; sleep 2; done;']
       containers:
         - name: fastapi-app
           image: appbakdata.azurecr.io/bakdata/fastapi-app-db:421a09a43159945d4b0f8f44303a092a2128010c
@@ -111,11 +109,6 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "1"
-        readinessProbe:
-          exec:
-            command: ["pg_isready", "-U", "postgres"]
-          initialDelaySeconds: 5
-          periodSeconds: 10
         volumeMounts:
         - name: init-sql-volume
           mountPath: /docker-entrypoint-initdb.d/
