@@ -53,13 +53,15 @@ jobs:
       run: |
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
-        git clone https://sensgithub:${{ secrets.GIT_REPO_TOKEN }}@github.com/sensgithub/bakdata-task.git
+        
+        git clone https://github.com/sensgithub/bakdata-task.git
         cd bakdata-task/manifests/
         sed -i "s#/bakdata/fastapi-app-db.*#appbakdata.azurecr.io/bakdata/fastapi-app-db:${{ github.sha }}#g" deployment.yaml
+
         git checkout fluxcd
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
-        git push origin fluxcd
+        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sensgithub/bakdata-task.git fluxcd
         
   deploy:
     permissions:
