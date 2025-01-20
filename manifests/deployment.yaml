@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: fastapi-app-config
 data:
-  DATABASE_URL: "postgresql+asyncpg://postgres:bakdatapgsql123!@postgres-service:5432/fastapi"
+  INIT_DB: "true"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -23,6 +23,7 @@ data:
         name VARCHAR(255),
         age INT
     );
+    INSERT INTO persons (name, age) VALUES ('Dobrin', 21), ('Vasil', 34) ON CONFLICT DO NOTHING;
 ---
 apiVersion: v1
 kind: Secret
@@ -33,6 +34,7 @@ data:
   POSTGRES_USER: cG9zdGdyZXM= 
   POSTGRES_PASSWORD: YmFrZGF0YXBnc3FsMTIzIQ==  
   POSTGRES_DB: ZmFzdGFwaQ==
+  DATABASE_URL: cG9zdGdyZXNxbCthc3luY3BnOi8vcG9zdGdyZXM6YmFrZGF0YXBnc3FsMTIzIUBwb3N0Z3Jlcy1zZXJ2aWNlOjU0MzIvZmFzdGFwaQ==
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,6 +50,11 @@ spec:
       labels:
         app: fastapi-app
     spec:
+      initContainers:
+      - name: wait-for-db
+        image: postgres:13
+        command: ['sh', '-c', 
+          'until pg_isready -h postgres-service -U postgres; do echo waiting for database; sleep 2; done;']
       containers:
         - name: fastapi-app
           image: appbakdata.azurecr.io/bakdata/fastapi-app-db:421a09a43159945d4b0f8f44303a092a2128010c
@@ -71,10 +78,6 @@ spec:
               port: 8000
             failureThreshold: 30
             periodSeconds: 10
-          lifecycle:
-            postStart:
-              exec:
-                command: ["sh", "-c", "sleep 10"]  
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -114,10 +117,26 @@ spec:
         - name: init-sql-volume
           mountPath: /docker-entrypoint-initdb.d/
           readOnly: true
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
       volumes:
       - name: init-sql-volume
         configMap:
           name: postgres-init-sql
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
