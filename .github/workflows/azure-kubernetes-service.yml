@@ -48,25 +48,22 @@ jobs:
         repository: sensgithub/DevOps-Project
         ref: 'main'
         token: ${{ secrets.GIT_TOKEN }}
-    - name: Check if image needs update
+    - name: Update deployment YAML file
       run: |
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
         git clone https://sensgithub:${{ secrets.GIT_TOKEN }}@github.com/sensgithub/bakdata-task.git
         cd bakdata-task/manifests
-        IMAGE_TAG=$(grep -oP 'appbakdata.azurecr.io/bakdata/fastapi-app-db:\K[^\s]*' deployment.yaml)
-        CURRENT_SHA=${{ github.sha }}
-        if [[ "$IMAGE_TAG" == "$CURRENT_SHA" ]]; then
-          echo "No change in image SHA, skipping commit."
-        exit 0
-        fi  
-    - name: Update deployment YAML file
-      run: |
-        cd bakdata-task/manifests
         sed -i "s#\(appbakdata.azurecr.io/bakdata/fastapi-app-db:\)[a-f0-9]*#\1${{ github.sha }}#g" deployment.yaml
+        LAST_COMMITTER=$(git log -1 --pretty=format:'%an')
+        if [ "$LAST_COMMITTER" != "sensgithub" ]; then
+          sleep 5m
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
         git push origin main
+        else
+          echo "Skipping commit to avoid triggering workflow loop."
+        fi
         
   deploy:
     permissions:
