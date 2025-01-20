@@ -53,9 +53,6 @@ spec:
       labels:
         app: fastapi-app
     spec:
-      initContainers:
-      - name: wait-for-db
-        image: postgres:13
       containers:
         - name: fastapi-app
           image: appbakdata.azurecr.io/bakdata/fastapi-app-db:421a09a43159945d4b0f8f44303a092a2128010c
