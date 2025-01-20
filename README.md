@@ -47,4 +47,6 @@ roleRef:
   name: [FLUX-APPLIER_NAME]-role
   apiGroup: rbac.authorization.k8s.io
 ```
-# Access the app using service's URL:Port 
+# Access the app using service's URL:Port
+
+![alt text]([https://github.com/sensgithub/bakdata-task/blob/main/screenshots/fastapi-example.png])
