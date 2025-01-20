@@ -1,10 +1,72 @@
+#PqD4!Aptwp3
+dzL
+bakdatapgsql123!
+
+uvicorn main:app --reload
+
+az ad sp create-for-rbac --name "serviceprincipalfastapi" --scope /subscriptions/2fd67ff3-af40-4e45-af18-e532a76ae577/resourceGroups/bakdata-devops --role Contributor --json-auth
+
+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
+
+git clone https://sensgithub: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@github.com/sensgithub/bakdata-task.git
+
+kubectl exec -it fastapi-app-59546849f4-v7t5z -- env | grep DATABASE_URL
+
+az aks nodepool add --resource-group bakdata-devops --cluster-name bakdata-aks --name newpool --vm-set-type "VirtualMachines" --vm-sizes "Standard_D4s_v3" --node-count 3
+
+sha256:360bf38b48c32243a1eeef0de88070f88b010a4c71c463504c113fb8c27f1f2c
+
+git clone git@github.com:username/repository.git
+
+{
+  "clientId": "6d354e71-005d-4508-b6bb-0298aa585521",
+  "clientSecret": "Noh8Q~6ldaL3~YCJpVBMR61oyfoWecunAL0FWb0W",
+  "subscriptionId": "2fd67ff3-af40-4e45-af18-e532a76ae577",
+  "tenantId": "cf45def5-a79c-4673-a685-5ea7816d91db",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpoaz ad sp show --id $AZURE_CLIENT_ID                                                                                                                                
+}
+
+export RANDOM_ID="$(openssl rand -hex 3)"
+export MY_RESOURCE_GROUP_NAME="DataAKSRG$RANDOM_ID"
+export REGION="eastus"
+export MY_AKS_CLUSTER_NAME="DataAKS$RANDOM_ID"
+export MY_DNS_LABEL="datadns$RANDOM_ID"
+
+
+Bpsv2 Series
+
+import os
+from dotenv import load_dotenv
+import sqlalchemy as _sql
+import sqlalchemy.ext.declarative as _declarative
+import sqlalchemy.orm as _orm
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.sql import text
+
+load_dotenv()
+DB_URL = os.getenv('DATABASE_URL')
+
+engine = _sql.create_engine(DB_URL)
+
+SessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = _declarative.declarative_base()|
+
+
+
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: fastapi-app-config
   namespace: default
 data:
-  INIT_DB: "true"
+  DATABASE_URL: "postgresql+asyncpg://postgres:bakdatapgsql123!@postgres-service:5432/fastapi"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -37,7 +99,6 @@ data:
   POSTGRES_USER: cG9zdGdyZXM= 
   POSTGRES_PASSWORD: YmFrZGF0YXBnc3FsMTIzIQ==  
   POSTGRES_DB: ZmFzdGFwaQ==
-  DATABASE_URL: cG9zdGdyZXNxbCthc3luY3BnOi8vcG9zdGdyZXM6YmFrZGF0YXBnc3FsMTIzIUBwb3N0Z3Jlcy1zZXJ2aWNlOjU0MzIvZmFzdGFwaQ==
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -76,6 +137,10 @@ spec:
               port: 8000
             failureThreshold: 30
             periodSeconds: 10
+          lifecycle:
+            postStart:
+              exec:
+                command: ["sh", "-c", "sleep 10"]  # Give Postgres time to initialize
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -106,30 +171,19 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "1"
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
         volumeMounts:
         - name: init-sql-volume
           mountPath: /docker-entrypoint-initdb.d/
           readOnly: true
-        - name: postgres-data
-          mountPath: /var/lib/postgresql/data
       volumes:
       - name: init-sql-volume
         configMap:
           name: postgres-init-sql
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
