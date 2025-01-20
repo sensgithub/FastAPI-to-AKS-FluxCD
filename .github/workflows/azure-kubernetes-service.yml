@@ -57,7 +57,6 @@ jobs:
         sed -i "s#\(appbakdata.azurecr.io/bakdata/fastapi-app-db:\)[a-f0-9]*#\1${{ github.sha }}#g" deployment.yaml
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
-        sleep (60)
         git push origin main
         
   deploy:
