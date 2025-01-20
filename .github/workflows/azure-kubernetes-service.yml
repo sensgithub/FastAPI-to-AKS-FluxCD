@@ -55,15 +55,10 @@ jobs:
         git clone https://sensgithub:${{ secrets.GIT_TOKEN }}@github.com/sensgithub/bakdata-task.git
         cd bakdata-task/manifests
         sed -i "s#\(appbakdata.azurecr.io/bakdata/fastapi-app-db:\)[a-f0-9]*#\1${{ github.sha }}#g" deployment.yaml
-        LAST_COMMITTER=$(git log -1 --pretty=format:'%an')
-        if [ "$LAST_COMMITTER" != "sensgithub" ]; then
-          sleep 5m
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
+        sleep (60)
         git push origin main
-        else
-          echo "Skipping commit to avoid triggering workflow loop."
-        fi
         
   deploy:
     permissions:
