@@ -69,16 +69,10 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
-          startupProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            failureThreshold: 30
-            periodSeconds: 10
           lifecycle:
             postStart:
               exec:
-                command: ["sh", "-c", "sleep 10"]  # Give Postgres time to initialize
+                command: ["sh", "-c", "sleep 10"]
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -109,11 +103,6 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "1"
-        readinessProbe:
-          exec:
-            command: ["pg_isready", "-U", "postgres"]
-          initialDelaySeconds: 5
-          periodSeconds: 10
         volumeMounts:
         - name: init-sql-volume
           mountPath: /docker-entrypoint-initdb.d/
