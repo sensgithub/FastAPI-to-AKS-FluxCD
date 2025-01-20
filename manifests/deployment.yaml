@@ -25,7 +25,7 @@ data:
         name VARCHAR(255),
         age INT
     );
-    INSERT INTO persons (name, age) VALUES ('Petar', 18), ('Kaloyan', 25) ON CONFLICT DO NOTHING;
+    INSERT INTO persons (name, age) VALUES ('Dimitar', 18), ('Kaloyan', 25) ON CONFLICT DO NOTHING;
 ---
 apiVersion: v1
 kind: Secret
