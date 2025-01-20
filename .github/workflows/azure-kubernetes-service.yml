@@ -53,7 +53,8 @@ jobs:
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
         git clone https://sensgithub:${{ secrets.GIT_TOKEN }}@github.com/sensgithub/bakdata-task.git
-        IMAGE_TAG=$(grep -oP 'appbakdata.azurecr.io/bakdata/fastapi-app-db:\K[^\s]*' manifests/deployment.yaml)
+        cd bakdata-task/manifests
+        IMAGE_TAG=$(grep -oP 'appbakdata.azurecr.io/bakdata/fastapi-app-db:\K[^\s]*' deployment.yaml)
         CURRENT_SHA=${{ github.sha }}
         if [[ "$IMAGE_TAG" == "$CURRENT_SHA" ]]; then
           echo "No change in image SHA, skipping commit."
@@ -61,7 +62,6 @@ jobs:
         fi  
     - name: Update deployment YAML file
       run: |
-        cd bakdata-task/manifests/
         sed -i "s#/bakdata/fastapi-app-db.*#appbakdata.azurecr.io/bakdata/fastapi-app-db:${{ github.sha }}#g" deployment.yaml
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
