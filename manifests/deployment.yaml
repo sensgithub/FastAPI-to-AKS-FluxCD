@@ -38,6 +38,34 @@ data:
   POSTGRES_PASSWORD: YmFrZGF0YXBnc3FsMTIzIQ==  
   POSTGRES_DB: ZmFzdGFwaQ==
 ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: default
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /data/postgres-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -109,10 +137,15 @@ spec:
         - name: init-sql-volume
           mountPath: /docker-entrypoint-initdb.d/
           readOnly: true
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
       volumes:
       - name: init-sql-volume
         configMap:
           name: postgres-init-sql
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
 ---
 apiVersion: v1
 kind: Service
