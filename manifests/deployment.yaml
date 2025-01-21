@@ -83,7 +83,7 @@ spec:
     spec:
       containers:
         - name: fastapi-app
-          image: appbakdata.azurecr.io/bakdata/fastapi-app-db:bc0717726fcf539a400ee437491127ecff53bd6a
+          image: appbakdata.azurecr.io/bakdata/fastapi-app-db:ff48b4f5fae4568453c6d4cbcfb55b231f984ade
           ports:
             - containerPort: 8000
           envFrom:
