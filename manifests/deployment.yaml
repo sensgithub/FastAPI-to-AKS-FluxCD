@@ -41,7 +41,7 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postgres-pv
+  name: postgres-pv-db
   namespace: default
 spec:
   capacity:
@@ -56,7 +56,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: postgres-pvc-db
   namespace: default
 spec:
   accessModes:
@@ -145,7 +145,7 @@ spec:
           name: postgres-init-sql
       - name: postgres-storage
         persistentVolumeClaim:
-          claimName: postgres-pvc
+          claimName: postgres-pvc-db
 ---
 apiVersion: v1
 kind: Service
