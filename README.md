@@ -7,6 +7,11 @@ POSTGRES_DB=[DB_NAME]
 ```
 # Commit to the Github repository
 
+! Before Commit and deployment to Azure:
+
+1. Make an App Registration
+2. Give it Contributor access to the Subscription
+
 # Trigger CI from commit
    - Dockerize the application
    - Build & deploy to AKS 
