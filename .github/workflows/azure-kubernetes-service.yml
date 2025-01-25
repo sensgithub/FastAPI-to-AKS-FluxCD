@@ -53,7 +53,7 @@ jobs:
         git config --global user.email "svetlan.nikolov@proton.me"
         git config --global user.name "sensgithub"
         git clone https://sensgithub:${{ secrets.GIT_TOKEN }}@github.com/sensgithub/FastAPI-to-AKS-FluxCD.git
-        cd bakdata-task/manifests
+        cd FastAPI-to-AKS-FluxCD/manifests
         sed -i "s#\(appbakdata.azurecr.io/bakdata/fastapi-app-db:\)[a-f0-9]*#\1${{ github.sha }}#g" deployment.yaml
         git add deployment.yaml
         git commit -m "Updated Deployment Number: fastapi-app-db:${{ github.sha }}"
