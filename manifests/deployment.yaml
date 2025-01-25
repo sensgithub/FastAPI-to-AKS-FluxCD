@@ -66,26 +66,6 @@ spec:
       storage: 5Gi
   storageClassName: standard
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: fastapi-pdb
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: fastapi-app
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: postgres-pdb
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: postgres
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
