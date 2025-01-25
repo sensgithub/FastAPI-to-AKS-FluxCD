@@ -1,6 +1,3 @@
-# bakdata-task
-Bakdata DevOps coding challenge
-
 # Create .env file for variables for PostgreSQL
 ```
 DATABASE_URL=postgres:[PASSWORD]@[URL]:5432/fastapi
