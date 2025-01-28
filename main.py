@@ -12,7 +12,11 @@ Base = declarative_base()
 async def seed_database(conn):
     try:
         seed_data = [
-            {"name": "Alex", "age": 44},
+            {"name": "Georgi", "age": 25},
+
+            {"name": "Martin", "age": 22},
+            
+            {"name": "Aleksandar", "age": 44},
 
             {"name": "Kristina", "age": 34}
         ]
